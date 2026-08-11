@@ -1,0 +1,64 @@
+services:
+  snov-am-postgres:
+    image: postgres:16-alpine
+    container_name: snov-am-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: snov_account_manager
+      POSTGRES_USER: snov_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - snov_am_postgres_data:/var/lib/postgresql/data
+    networks:
+      - snov-am-internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U snov_user -d snov_account_manager"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  snov-am-api:
+    build:
+      context: ./backend
+    container_name: snov-am-api
+    restart: unless-stopped
+    depends_on:
+      snov-am-postgres:
+        condition: service_healthy
+    environment:
+      ENVIRONMENT: production
+      DATABASE_URL: postgresql+psycopg://snov_user:${POSTGRES_PASSWORD}@snov-am-postgres:5432/snov_account_manager
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ALGORITHM: HS256
+      JWT_EXPIRES_MINUTES: ${JWT_EXPIRES_MINUTES:-60}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      API_RATE_LIMIT: ${API_RATE_LIMIT:-100/minute}
+    ports:
+      - "${API_PORT:-8000}:8000"
+    networks:
+      - snov-am-internal
+      - ativaai
+
+  snov-am-frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+    container_name: snov-am-frontend
+    restart: unless-stopped
+    depends_on:
+      - snov-am-api
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+    networks:
+      - ativaai
+
+volumes:
+  snov_am_postgres_data:
+
+networks:
+  snov-am-internal:
+    driver: bridge
+  ativaai:
+    external: true

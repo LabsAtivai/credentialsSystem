@@ -1,0 +1,45 @@
+# Secrets / env
+.env
+.env.*
+!.env.example
+
+# Planilhas de origem / dumps / backups (NUNCA versionar dados sensíveis)
+*.csv
+*.xlsx
+*.xls
+*.sql
+*.dump
+*.bak
+
+# Chaves e credenciais soltas
+*.pem
+*.key
+credentials.json
+token.json
+service-account*.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# Node (frontend)
+node_modules/
+dist/
+.vite/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Docker
+*.log
